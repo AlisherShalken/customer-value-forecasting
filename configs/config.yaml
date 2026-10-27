@@ -1,0 +1,66 @@
+# Pipeline configuration. Paths are resolved relative to the project root.
+
+data:
+  source_url: https://archive.ics.uci.edu/static/public/502/online+retail+ii.zip
+  raw_dir: data/raw
+  warehouse: data/warehouse.duckdb
+
+# Monthly scoring snapshots. Features use only history strictly before the
+# snapshot date; labels look `horizon_days` ahead.
+snapshots:
+  first: 2010-06-01
+  last: 2011-09-01
+  horizon_days: 90
+  active_window_days: 365   # customers with a purchase in this window are scored
+
+evaluation:
+  # Rolling-origin backtest. For each cutoff the model is trained on snapshots
+  # whose label window closes on or before the cutoff (no label leakage).
+  backtest_cutoffs: [2011-06-01, 2011-07-01, 2011-08-01, 2011-09-01]
+  holdout_cutoff: 2011-09-01
+  top_k_shares: [0.05, 0.10, 0.20]
+
+training:
+  seed: 42
+  early_stopping_rounds: 100
+  n_trials: 40
+  # Tasks whose Optuna result (written to `tuned_params`) overrides the defaults
+  # below. Revenue is excluded: its inner-CV gain did not hold in the backtest.
+  tune_tasks: [propensity]
+  tuned_params: configs/tuned_params.json
+  propensity:
+    objective: binary
+    learning_rate: 0.03
+    num_leaves: 31
+    min_child_samples: 50
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 1
+    lambda_l2: 1.0
+    n_estimators: 2000
+  revenue:
+    objective: tweedie
+    tweedie_variance_power: 1.4
+    learning_rate: 0.03
+    num_leaves: 31
+    min_child_samples: 50
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 1
+    lambda_l2: 1.0
+    n_estimators: 2000
+
+# Campaign economics used to pick the contact list size. `assumed_uplift` is
+# the relative lift in purchase probability from a contact; replace with the
+# measured value once an A/B holdout has been run.
+policy:
+  contact_cost: 10.0       # voucher + account manager time per contact, GBP
+  gross_margin: 0.30
+  assumed_uplift: 0.10
+
+monitoring:
+  psi_warn: 0.10
+  psi_alert: 0.25
+
+artifacts_dir: artifacts
+reports_dir: reports

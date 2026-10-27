@@ -1,0 +1,13 @@
+{
+  "propensity": {
+    "learning_rate": 0.05240096995169206,
+    "num_leaves": 34,
+    "min_child_samples": 146,
+    "feature_fraction": 0.4507496062531179,
+    "bagging_fraction": 0.9996450568347826,
+    "lambda_l2": 1.1804293778482031,
+    "min_split_gain": 0.3115939686528633,
+    "bagging_freq": 1,
+    "n_estimators": 3000
+  }
+}

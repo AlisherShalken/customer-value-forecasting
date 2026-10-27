@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Source extract, warehouse and model binaries are rebuilt by the pipeline
+data/
+artifacts/
+reports/scoring/
